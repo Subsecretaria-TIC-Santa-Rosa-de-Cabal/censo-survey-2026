@@ -67,9 +67,9 @@ enum PetType {
 
 model HouseholdSurvey {
   id           String    @id @default(uuid())
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  submittedAt  DateTime? @map("submitted_at")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  submittedAt  DateTime? @map("submitted_at") @db.Timestamptz()
 
   housing Housing?
   people  Person[]
