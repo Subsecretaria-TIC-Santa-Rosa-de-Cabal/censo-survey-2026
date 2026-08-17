@@ -1,0 +1,19 @@
+
+> censo-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.56.1:3000
+- Environments: .env
+✓ Ready in 488ms
+✓ Running next.config.ts took 33ms
+
+○ Compiling / ...
+ GET / 200 in 13.5s (next.js: 13.3s, application-code: 198ms)
+  Reload env: .env
+  Reload env: .env
+  Reload env: .env
+  Reload env: .env
+✓ Compiled in 65ms
+  Reload env: .env

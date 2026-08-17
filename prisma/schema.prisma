@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SectorType {
+  urban
+  rural
+}
+
+enum TenureType {
+  owner
+  tenant
+  occupant
+  possessor
+}
+
+enum PropertyStatus {
+  habitable
+  uninhabitable
+  destroyed
+  damaged
+}
+
+enum PropertyType {
+  rural_housing
+  apartment
+  house
+  commercial_premises
+  other
+}
+
+enum DocumentType {
+  citizenship_id
+  identity_card
+  birth_certificate
+  passport
+  ppt
+  pep
+}
+
+enum GenderIdentity {
+  woman
+  man
+  other
+  prefer_not_to_say
+}
+
+enum EthnicAffiliation {
+  indigenous
+  non_indigenous
+}
+
+enum PetType {
+  dog
+  cat
+  bird
+  rabbit
+  other
+}
+
+model HouseholdSurvey {
+  id           String    @id @default(uuid())
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  submittedAt  DateTime? @map("submitted_at")
+
+  housing Housing?
+  people  Person[]
+  pets    Pet[]
+
+  @@map("household_survey")
+}
+
+model Housing {
+  id                    String         @id @default(uuid())
+  surveyId              String         @unique @map("survey_id")
+  survey                HouseholdSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  neighborhoodOrSector  String         @map("neighborhood_or_sector")
+  address               String
+  sectorType            SectorType     @map("sector_type")
+  farmNameOrReference   String?        @map("farm_name_or_reference")
+  stratum               Int
+  tenureType            TenureType     @map("tenure_type")
+  propertyStatus        PropertyStatus @map("property_status")
+  damageDescription     String?        @map("damage_description")
+  wasEvacuated          Boolean        @map("was_evacuated")
+  propertyType          PropertyType   @map("property_type")
+  propertyTypeOther     String?        @map("property_type_other")
+  totalFamilies         Int            @map("total_families")
+  householdMembersCount Int            @map("household_members_count")
+  peopleToRegister      Int            @map("people_to_register")
+  petsToRegister        Int            @default(0) @map("pets_to_register")
+  longitude             Decimal?       @map("longitude") @db.Decimal(12, 8)
+  latitude              Decimal?       @map("latitude") @db.Decimal(12, 8)
+
+  @@map("housing")
+}
+
+model Person {
+  id                 String          @id @default(uuid())
+  surveyId           String          @map("survey_id")
+  survey             HouseholdSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  orderIndex         Int             @map("order_index")
+  firstNames         String          @map("first_names")
+  lastNames          String          @map("last_names")
+  documentType       DocumentType    @map("document_type")
+  documentNumber     String          @map("document_number")
+  genderIdentity     GenderIdentity  @map("gender_identity")
+  birthDate          DateTime        @map("birth_date") @db.Date
+  ethnicAffiliation  EthnicAffiliation @map("ethnic_affiliation")
+  phoneNumber        String          @map("phone_number")
+
+  @@unique([surveyId, orderIndex])
+  @@map("person")
+}
+
+model Pet {
+  id        String          @id @default(uuid())
+  surveyId  String          @map("survey_id")
+  survey    HouseholdSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  orderIndex Int           @map("order_index")
+  petType   PetType
+  name      String?
+
+  @@unique([surveyId, orderIndex])
+  @@map("pet")
+}

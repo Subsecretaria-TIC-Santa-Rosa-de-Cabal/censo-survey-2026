@@ -1,0 +1,9 @@
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  unrs-resolver: true
+overrides:
+  '@types/pg': 8.21.0
+minimumReleaseAgeExclude:
+  - '@hookform/resolvers@5.9.1'
+  - '@types/pg@8.23.0'
