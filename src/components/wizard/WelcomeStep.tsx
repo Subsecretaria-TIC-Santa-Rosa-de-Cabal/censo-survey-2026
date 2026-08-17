@@ -87,7 +87,7 @@ export function WelcomeStep() {
             <p className="text-sm">
               Para continuar debe leer y aceptar la{" "}
               <a
-                href="/politica-tratamiento-datos.pdf"
+                href="https://santarosadecabalrisaralda.micolombiadigital.gov.co/sites/santarosadecabalrisaralda/content/files/000684/34163_politica_tratamiento_datos_personales_santarosadecabal_2021.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#49805e] underline underline-offset-2 font-medium hover:text-[#3a6a4b]"
