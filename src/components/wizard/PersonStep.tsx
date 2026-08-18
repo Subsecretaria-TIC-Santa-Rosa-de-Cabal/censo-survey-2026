@@ -1,18 +1,40 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useWizardStore } from "@/lib/store";
-import { personSchema, PersonData, documentTypeOptions, genderIdentityOptions, ethnicAffiliationOptions } from "@/lib/schemas";
+import {
+  personSchema,
+  PersonData,
+  documentTypeOptions,
+  genderIdentityOptions,
+  ethnicAffiliationOptions,
+  disabilityConditionOptions,
+  relationshipOptions,
+  OTHER_EPS_VALUE,
+} from "@/lib/schemas";
+import { getEps } from "@/app/actions";
 import { FormInput } from "./FormInput";
 import { FormSelect } from "./FormSelect";
+import { FormSearchableSelect } from "./FormSearchableSelect";
 
 export function PersonStep() {
   const { stepIndex, people, setPeople, next, back } = useWizardStore();
   const person = people[stepIndex];
+
+  const [epsOptions, setEpsOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingEps, setLoadingEps] = useState(true);
+
+  useEffect(() => {
+    setLoadingEps(true);
+    getEps().then((list) => {
+      setEpsOptions(list.map((item) => ({ value: item.id, label: item.name })));
+      setLoadingEps(false);
+    });
+  }, []);
 
   const {
     register,
@@ -30,9 +52,16 @@ export function PersonStep() {
     reset(person);
   }, [person, reset]);
 
+  const disabilityCondition = watch("disabilityCondition");
+  const epsId = watch("epsId");
+  const epsSelectValue = epsId || "";
+
   const onSubmit: SubmitHandler<PersonData> = (data) => {
+    const finalData = data.epsId
+      ? { ...data, epsOther: "" }
+      : { ...data, epsId: OTHER_EPS_VALUE, epsOther: data.epsOther?.trim() ?? "" };
     const updated = [...people];
-    updated[stepIndex] = data;
+    updated[stepIndex] = finalData;
     setPeople(updated);
     next();
   };
@@ -85,6 +114,52 @@ export function PersonStep() {
           />
 
           <FormSelect
+            id="relationship"
+            label="Parentesco"
+            value={watch("relationship")}
+            onChange={(value) =>
+              setValue("relationship", value as PersonData["relationship"], {
+                shouldValidate: true,
+              })
+            }
+            options={relationshipOptions.map((o) => ({ value: o.value, label: o.label }))}
+            error={errors.relationship?.message}
+            required
+          />
+
+          <FormSearchableSelect
+            id="epsId"
+            label="EPS"
+            value={epsSelectValue}
+            onChange={(value) => {
+              if (value === OTHER_EPS_VALUE) {
+                setValue("epsId", OTHER_EPS_VALUE, { shouldValidate: true });
+              } else {
+                setValue("epsId", value ?? "", { shouldValidate: true });
+                setValue("epsOther", "", { shouldValidate: true });
+              }
+            }}
+            options={epsOptions}
+            placeholder="Seleccione una EPS..."
+            searchPlaceholder="Buscar EPS..."
+            otherValue={OTHER_EPS_VALUE}
+            loading={loadingEps}
+            loadingMessage="Cargando EPS..."
+            error={errors.epsId?.message}
+            required
+          />
+
+          {epsSelectValue === OTHER_EPS_VALUE && (
+            <FormInput
+              id="epsOther"
+              label="Escriba el nombre de la EPS"
+              {...register("epsOther")}
+              error={errors.epsOther?.message}
+              required
+            />
+          )}
+
+          <FormSelect
             id="genderIdentity"
             label="Identidad de género"
             value={watch("genderIdentity")}
@@ -120,6 +195,30 @@ export function PersonStep() {
             error={errors.ethnicAffiliation?.message}
             required
           />
+
+          <FormSelect
+            id="disabilityCondition"
+            label="Condición de discapacidad"
+            value={disabilityCondition}
+            onChange={(value) =>
+              setValue("disabilityCondition", value as PersonData["disabilityCondition"], {
+                shouldValidate: true,
+              })
+            }
+            options={disabilityConditionOptions.map((o) => ({ value: o.value, label: o.label }))}
+            error={errors.disabilityCondition?.message}
+            required
+          />
+
+          {disabilityCondition === "other" && (
+            <FormInput
+              id="disabilityConditionOther"
+              label="Especifique la condición de discapacidad"
+              {...register("disabilityConditionOther")}
+              error={errors.disabilityConditionOther?.message}
+              required
+            />
+          )}
 
           <FormInput
             id="phoneNumber"

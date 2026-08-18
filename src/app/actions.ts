@@ -16,6 +16,8 @@ import {
   DocumentType,
   GenderIdentity,
   EthnicAffiliation,
+  DisabilityCondition,
+  Relationship,
   PetType,
 } from "@prisma/client";
 
@@ -65,6 +67,19 @@ export async function getNeighborhoods(): Promise<{ id: string; name: string }[]
   }
 }
 
+export async function getEps(): Promise<{ id: string; name: string }[]> {
+  try {
+    const epsList = await prisma.eps.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    });
+    return epsList;
+  } catch (error) {
+    console.error("Error al obtener EPS:", error);
+    return [];
+  }
+}
+
 function toSectorType(value: HousingData["sectorType"]): SectorType {
   return value as SectorType;
 }
@@ -85,12 +100,20 @@ function toDocumentType(value: PersonData["documentType"]): DocumentType {
   return value as DocumentType;
 }
 
+function toRelationship(value: PersonData["relationship"]): Relationship {
+  return value as Relationship;
+}
+
 function toGenderIdentity(value: PersonData["genderIdentity"]): GenderIdentity {
   return value as GenderIdentity;
 }
 
 function toEthnicAffiliation(value: PersonData["ethnicAffiliation"]): EthnicAffiliation {
   return value as EthnicAffiliation;
+}
+
+function toDisabilityCondition(value: PersonData["disabilityCondition"]): DisabilityCondition {
+  return value as DisabilityCondition;
 }
 
 function toPetType(value: PetData["petType"]): PetType {
@@ -151,11 +174,19 @@ export async function submitSurvey(data: FullSurveyData): Promise<SubmitResult> 
             lastNames: person.lastNames,
             documentType: toDocumentType(person.documentType),
             documentNumber: person.documentNumber,
+            relationship: toRelationship(person.relationship),
+            epsId: person.epsId || null,
+            epsOther: person.epsId ? null : person.epsOther?.trim() || null,
             genderIdentity: toGenderIdentity(person.genderIdentity),
             birthDate: new Date(person.birthDate),
             ethnicAffiliation: toEthnicAffiliation(person.ethnicAffiliation),
             phoneNumber: person.phoneNumber,
             email: person.email?.trim() || null,
+            disabilityCondition: toDisabilityCondition(person.disabilityCondition),
+            disabilityConditionOther:
+              person.disabilityCondition === "other"
+                ? person.disabilityConditionOther?.trim() ?? null
+                : null,
           })),
         },
         pets: {

@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useWizardStore } from "@/lib/store";
-import { getNeighborhoods, submitSurvey } from "@/app/actions";
+import { getNeighborhoods, getEps, submitSurvey } from "@/app/actions";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { SubmittingOverlay } from "./SubmittingOverlay";
 import {
@@ -25,6 +25,8 @@ import {
   documentTypeOptions,
   genderIdentityOptions,
   ethnicAffiliationOptions,
+  disabilityConditionOptions,
+  relationshipOptions,
   petTypeOptions,
 } from "@/lib/schemas";
 
@@ -43,6 +45,7 @@ export function ReviewStep() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [neighborhoodName, setNeighborhoodName] = useState<string | null>(null);
+  const [epsNames, setEpsNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (housing?.neighborhoodId) {
@@ -52,6 +55,19 @@ export function ReviewStep() {
       });
     }
   }, [housing?.neighborhoodId]);
+
+  useEffect(() => {
+    const epsIds = people.map((p) => p.epsId).filter((id): id is string => !!id);
+    if (epsIds.length > 0) {
+      getEps().then((list) => {
+        const map: Record<string, string> = {};
+        for (const item of list) {
+          map[item.id] = item.name;
+        }
+        setEpsNames(map);
+      });
+    }
+  }, [people]);
 
   if (!housing) return null;
 
@@ -162,6 +178,18 @@ export function ReviewStep() {
                     value={`${findLabel(person.documentType, documentTypeOptions)} ${person.documentNumber}`}
                   />
                   <ReviewItem
+                    label="Parentesco"
+                    value={findLabel(person.relationship, relationshipOptions)}
+                  />
+                  <ReviewItem
+                    label="EPS"
+                    value={
+                      person.epsId && person.epsId !== "__OTHER_EPS__"
+                        ? epsNames[person.epsId]
+                        : person.epsOther
+                    }
+                  />
+                  <ReviewItem
                     label="Género"
                     value={findLabel(person.genderIdentity, genderIdentityOptions)}
                   />
@@ -169,6 +197,14 @@ export function ReviewStep() {
                   <ReviewItem
                     label="Pertenencia étnica"
                     value={findLabel(person.ethnicAffiliation, ethnicAffiliationOptions)}
+                  />
+                  <ReviewItem
+                    label="Condición de discapacidad"
+                    value={
+                      person.disabilityCondition === "other"
+                        ? person.disabilityConditionOther
+                        : findLabel(person.disabilityCondition, disabilityConditionOptions)
+                    }
                   />
                   <ReviewItem label="Teléfono" value={person.phoneNumber} />
                   <ReviewItem label="Correo electrónico" value={person.email} />

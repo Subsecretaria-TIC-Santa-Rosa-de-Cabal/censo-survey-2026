@@ -20,11 +20,13 @@ interface FormSearchableSelectProps {
   searchPlaceholder?: string;
   loading?: boolean;
   loadingMessage?: string;
+  otherValue?: string;
+  otherLabel?: string;
   error?: string;
   required?: boolean;
 }
 
-const OTHER_VALUE = "__OTHER__";
+const DEFAULT_OTHER_VALUE = "__OTHER__";
 
 export function FormSearchableSelect({
   id,
@@ -36,6 +38,8 @@ export function FormSearchableSelect({
   searchPlaceholder = "Buscar...",
   loading = false,
   loadingMessage = "Cargando...",
+  otherValue = DEFAULT_OTHER_VALUE,
+  otherLabel = "Otro",
   error,
   required = false,
 }: FormSearchableSelectProps) {
@@ -45,7 +49,7 @@ export function FormSearchableSelect({
 
   const allOptions: Option[] = [
     ...options,
-    { value: OTHER_VALUE, label: "Otro" },
+    { value: otherValue, label: otherLabel },
   ];
 
   const filteredOptions =
@@ -146,4 +150,4 @@ export function FormSearchableSelect({
   );
 }
 
-export { OTHER_VALUE };
+export { DEFAULT_OTHER_VALUE as OTHER_VALUE };

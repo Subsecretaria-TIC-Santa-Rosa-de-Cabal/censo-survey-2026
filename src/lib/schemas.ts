@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const OTHER_NEIGHBORHOOD_VALUE = "__OTHER__";
+export const OTHER_EPS_VALUE = "__OTHER_EPS__";
 
 export const sectorTypeOptions = [
   { value: "urban", label: "Urbano" },
@@ -12,6 +13,7 @@ export const tenureTypeOptions = [
   { value: "tenant", label: "Arrendatario" },
   { value: "occupant", label: "Ocupante" },
   { value: "possessor", label: "Poseedor" },
+  { value: "not_informed", label: "No informa" },
 ] as const;
 
 export const propertyStatusOptions = [
@@ -22,10 +24,20 @@ export const propertyStatusOptions = [
 ] as const;
 
 export const propertyTypeOptions = [
-  { value: "rural_housing", label: "Vivienda rural" },
-  { value: "apartment", label: "Apartamento" },
-  { value: "house", label: "Casa" },
+  { value: "housing", label: "Vivienda" },
+  { value: "farm", label: "Finca" },
   { value: "commercial_premises", label: "Local comercial" },
+  { value: "factory", label: "Fábrica" },
+  { value: "warehouse", label: "Bodega" },
+  { value: "lot", label: "Lote" },
+  { value: "wellness_center", label: "Centro de bienestar" },
+  { value: "educational_center", label: "Centro educativo o escuela" },
+  { value: "senior_center", label: "Centro de bienestar adulto mayor" },
+  { value: "hospital", label: "Hospital" },
+  { value: "stadium", label: "Estadio" },
+  { value: "church", label: "Iglesia o institución religiosa" },
+  { value: "municipality", label: "Alcaldía municipal" },
+  { value: "police_station", label: "Estación de policía" },
   { value: "other", label: "Otro" },
 ] as const;
 
@@ -36,18 +48,61 @@ export const documentTypeOptions = [
   { value: "passport", label: "Pasaporte" },
   { value: "ppt", label: "Permiso de protección temporal (PPT)" },
   { value: "pep", label: "Permiso especial de permanencia (PEP)" },
+  { value: "foreign_id", label: "Cédula de extranjería" },
+  { value: "nit", label: "NIT" },
 ] as const;
 
 export const genderIdentityOptions = [
   { value: "woman", label: "Mujer" },
   { value: "man", label: "Hombre" },
+  { value: "transgender", label: "Transgénero" },
   { value: "other", label: "Otro" },
   { value: "prefer_not_to_say", label: "Prefiero no responder" },
 ] as const;
 
 export const ethnicAffiliationOptions = [
   { value: "indigenous", label: "Indígena" },
-  { value: "non_indigenous", label: "No indígena" },
+  { value: "gitano_rom", label: "Gitano(a) - ROM" },
+  { value: "raizal", label: "Raizal" },
+  { value: "palenquero", label: "Palenquero(a)" },
+  { value: "negro", label: "Negro(a)" },
+  { value: "mulato", label: "Mulato(a)" },
+  { value: "afrodescendant", label: "Afrodescendiente(a)" },
+  { value: "afrocolombian", label: "Afrocolombiano(a)" },
+  { value: "not_applicable", label: "No aplica" },
+] as const;
+
+export const disabilityConditionOptions = [
+  { value: "visual", label: "Visual" },
+  { value: "auditory", label: "Auditiva" },
+  { value: "physical", label: "Física" },
+  { value: "cognitive", label: "Cognitiva" },
+  { value: "none", label: "Ninguna" },
+  { value: "other", label: "Otro" },
+] as const;
+
+export const relationshipOptions = [
+  { value: "head_of_household", label: "Jefe(a) o cabeza de hogar" },
+  { value: "partner", label: "Pareja" },
+  { value: "spouse", label: "Esposo(a)" },
+  { value: "son_daughter", label: "Hijo(a)" },
+  { value: "stepchild", label: "Hijastro(a)" },
+  { value: "grandparent", label: "Abuelo(a)" },
+  { value: "nephew_niece", label: "Sobrino(a)" },
+  { value: "grandchild", label: "Nieto(a)" },
+  { value: "uncle_aunt", label: "Tio(a)" },
+  { value: "father", label: "Padre" },
+  { value: "mother", label: "Madre" },
+  { value: "father_in_law_mother_in_law", label: "Suegro(a)" },
+  { value: "brother_sister", label: "Hermano(a)" },
+  { value: "half_brother_half_sister", label: "Hermanastro(a)" },
+  { value: "son_in_law", label: "Yerno" },
+  { value: "daughter_in_law", label: "Nuera" },
+  { value: "brother_in_law_sister_in_law", label: "Cuñado(a)" },
+  { value: "cousin", label: "Primo(a)" },
+  { value: "other_relative", label: "Otro pariente" },
+  { value: "non_relative", label: "No pariente" },
+  { value: "not_informed", label: "No informa" },
 ] as const;
 
 export const petTypeOptions = [
@@ -102,7 +157,23 @@ export const housingDataSchema = z
     damageDescription: z.string().min(1, "La descripción breve de los daños es obligatoria."),
     wasEvacuated: requiredEnum(["yes", "no"], "Debe indicar si ha sido evacuado."),
     propertyType: requiredEnum(
-      ["rural_housing", "apartment", "house", "commercial_premises", "other"],
+      [
+        "housing",
+        "farm",
+        "commercial_premises",
+        "factory",
+        "warehouse",
+        "lot",
+        "wellness_center",
+        "educational_center",
+        "senior_center",
+        "hospital",
+        "stadium",
+        "church",
+        "municipality",
+        "police_station",
+        "other",
+      ],
       "El tipo de inmueble es obligatorio."
     ),
     propertyTypeOther: z.string().optional(),
@@ -158,17 +229,45 @@ export const personSchema = z.object({
   firstNames: z.string().min(1, "Los nombres son obligatorios."),
   lastNames: z.string().min(1, "Los apellidos son obligatorios."),
   documentType: requiredEnum(
-    ["citizenship_id", "identity_card", "birth_certificate", "passport", "ppt", "pep"],
+    ["citizenship_id", "identity_card", "birth_certificate", "passport", "ppt", "pep", "foreign_id", "nit"],
     "El tipo de documento es obligatorio."
   ),
   documentNumber: z.string().min(1, "El número de documento es obligatorio."),
+  relationship: requiredEnum(
+    [
+      "head_of_household",
+      "partner",
+      "spouse",
+      "son_daughter",
+      "stepchild",
+      "grandparent",
+      "nephew_niece",
+      "grandchild",
+      "uncle_aunt",
+      "father",
+      "mother",
+      "father_in_law_mother_in_law",
+      "brother_sister",
+      "half_brother_half_sister",
+      "son_in_law",
+      "daughter_in_law",
+      "brother_in_law_sister_in_law",
+      "cousin",
+      "other_relative",
+      "non_relative",
+      "not_informed",
+    ],
+    "El parentesco es obligatorio."
+  ),
+  epsId: z.string().optional(),
+  epsOther: z.string().optional(),
   genderIdentity: requiredEnum(
-    ["woman", "man", "other", "prefer_not_to_say"],
+    ["woman", "man", "transgender", "other", "prefer_not_to_say"],
     "La identidad de género es obligatoria."
   ),
   birthDate: z.string().min(1, "La fecha de nacimiento es obligatoria."),
   ethnicAffiliation: requiredEnum(
-    ["indigenous", "non_indigenous"],
+    ["indigenous", "gitano_rom", "raizal", "palenquero", "negro", "mulato", "afrodescendant", "afrocolombian", "not_applicable"],
     "La pertenencia étnica es obligatoria."
   ),
   phoneNumber: z.string().min(1, "El número de teléfono es obligatorio."),
@@ -177,7 +276,35 @@ export const personSchema = z.object({
     .email("El correo electrónico no es válido.")
     .optional()
     .or(z.literal("")),
-});
+  disabilityCondition: requiredEnum(
+    ["visual", "auditory", "physical", "cognitive", "none", "other"],
+    "La condición de discapacidad es obligatoria."
+  ),
+  disabilityConditionOther: z.string().optional(),
+})
+  .refine(
+    (data) => data.disabilityCondition !== "other" || !!data.disabilityConditionOther?.trim(),
+    {
+      message: "Debe especificar la condición de discapacidad.",
+      path: ["disabilityConditionOther"],
+    }
+  )
+  .refine(
+    (data) =>
+      !!data.epsId?.trim() ||
+      (data.epsId === OTHER_EPS_VALUE && !!data.epsOther?.trim()),
+    {
+      message: "Debe seleccionar una EPS o escribir una.",
+      path: ["epsId"],
+    }
+  )
+  .refine(
+    (data) => data.epsId !== OTHER_EPS_VALUE || !!data.epsOther?.trim(),
+    {
+      message: "Debe escribir el nombre de la EPS.",
+      path: ["epsOther"],
+    }
+  );
 
 export const petSchema = z.object({
   petType: requiredEnum(["dog", "cat", "bird", "rabbit", "other"], "El tipo de mascota es obligatorio."),

@@ -64,10 +64,16 @@ export const useWizardStore = create<WizardState & WizardActions>()(
               lastNames: "",
               documentType: undefined as unknown as PersonData["documentType"],
               documentNumber: "",
+              relationship: undefined as unknown as PersonData["relationship"],
+              epsId: "",
+              epsOther: "",
               genderIdentity: undefined as unknown as PersonData["genderIdentity"],
               birthDate: "",
               ethnicAffiliation: undefined as unknown as PersonData["ethnicAffiliation"],
+              disabilityCondition: undefined as unknown as PersonData["disabilityCondition"],
+              disabilityConditionOther: "",
               phoneNumber: "",
+              email: "",
             })
           );
           set({ people: [...current, ...added] });

@@ -19,6 +19,7 @@ enum TenureType {
   tenant
   occupant
   possessor
+  not_informed
 }
 
 enum PropertyStatus {
@@ -29,10 +30,20 @@ enum PropertyStatus {
 }
 
 enum PropertyType {
-  rural_housing
-  apartment
-  house
+  housing
+  farm
   commercial_premises
+  factory
+  warehouse
+  lot
+  wellness_center
+  educational_center
+  senior_center
+  hospital
+  stadium
+  church
+  municipality
+  police_station
   other
 }
 
@@ -43,18 +54,61 @@ enum DocumentType {
   passport
   ppt
   pep
+  foreign_id
+  nit
 }
 
 enum GenderIdentity {
   woman
   man
+  transgender
   other
   prefer_not_to_say
 }
 
 enum EthnicAffiliation {
   indigenous
-  non_indigenous
+  gitano_rom
+  raizal
+  palenquero
+  negro
+  mulato
+  afrodescendant
+  afrocolombian
+  not_applicable
+}
+
+enum DisabilityCondition {
+  visual
+  auditory
+  physical
+  cognitive
+  none
+  other
+}
+
+enum Relationship {
+  head_of_household
+  partner
+  spouse
+  son_daughter
+  stepchild
+  grandparent
+  nephew_niece
+  grandchild
+  uncle_aunt
+  father
+  mother
+  father_in_law_mother_in_law
+  brother_sister
+  half_brother_half_sister
+  son_in_law
+  daughter_in_law
+  brother_in_law_sister_in_law
+  cousin
+  other_relative
+  non_relative
+  not_informed
 }
 
 enum PetType {
@@ -117,11 +171,17 @@ model Person {
   lastNames          String          @map("last_names")
   documentType       DocumentType    @map("document_type")
   documentNumber     String          @map("document_number")
-  genderIdentity     GenderIdentity  @map("gender_identity")
+  relationship             Relationship       @map("relationship")
+  epsId                    String?            @map("eps_id")
+  eps                      Eps?               @relation(fields: [epsId], references: [id], onDelete: SetNull)
+  epsOther                 String?            @map("eps_other")
+  genderIdentity           GenderIdentity     @map("gender_identity")
   birthDate          DateTime        @map("birth_date") @db.Date
-  ethnicAffiliation  EthnicAffiliation @map("ethnic_affiliation")
-  phoneNumber        String            @map("phone_number")
-  email              String?           @map("email")
+  ethnicAffiliation        EthnicAffiliation  @map("ethnic_affiliation")
+  phoneNumber              String             @map("phone_number")
+  email                    String?            @map("email")
+  disabilityCondition      DisabilityCondition @map("disability_condition")
+  disabilityConditionOther String?            @map("disability_condition_other")
 
   @@unique([surveyId, orderIndex])
   @@map("person")
@@ -149,4 +209,14 @@ model Neighborhood {
   housings  Housing[]
 
   @@map("neighborhood")
+}
+
+model Eps {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  people    Person[]
+
+  @@map("eps")
 }
