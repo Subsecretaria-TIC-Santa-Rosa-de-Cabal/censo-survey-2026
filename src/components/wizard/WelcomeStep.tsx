@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { CircleCheckIcon, XIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,13 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useWizardStore } from "@/lib/store";
 
 export function WelcomeStep() {
-  const {
-    acceptedDataTreatment,
-    setAcceptedDataTreatment,
-    next,
-    surveySubmitted,
-    setSurveySubmitted,
-  } = useWizardStore();
+  const { acceptedDataTreatment, setAcceptedDataTreatment, next } = useWizardStore();
 
   return (
     <Card className="border-none shadow-none ring-0 bg-transparent">
@@ -35,30 +28,6 @@ export function WelcomeStep() {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-0 space-y-4 text-muted-foreground">
-        {surveySubmitted && (
-          <div className="rounded-xl border border-[#49805e]/20 bg-[#e8f3ec] p-4">
-            <div className="flex items-start gap-3">
-              <CircleCheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#49805e]" />
-              <div className="flex-1">
-                <p className="font-medium text-[#2d4f3a]">
-                  ¡Formulario enviado correctamente!
-                </p>
-                <p className="text-sm text-[#2d4f3a]/80">
-                  Gracias por participar en el censo.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSurveySubmitted(false)}
-                className="text-[#2d4f3a]/70 hover:text-[#2d4f3a]"
-                aria-label="Cerrar mensaje"
-              >
-                <XIcon className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
         <p>
           Este formulario tiene como objetivo recopilar información actualizada sobre las
           viviendas, los integrantes de los hogares y las mascotas que habitan en ellas.

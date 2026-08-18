@@ -129,6 +129,14 @@ export function PersonStep() {
             error={errors.phoneNumber?.message}
             required
           />
+
+          <FormInput
+            id="email"
+            label="Correo electrónico"
+            type="email"
+            {...register("email")}
+            error={errors.email?.message}
+          />
         </CardContent>
         <CardFooter className="px-0 pt-6 flex flex-col-reverse sm:flex-row gap-3 bg-transparent border-none">
           <Button type="button" variant="outline" onClick={back} className="w-full sm:w-auto">

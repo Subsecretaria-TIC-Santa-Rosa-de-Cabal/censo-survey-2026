@@ -16,7 +16,6 @@ interface WizardState {
   housing: HousingData | null;
   people: PersonData[];
   pets: PetData[];
-  surveySubmitted: boolean;
 }
 
 interface WizardActions {
@@ -30,8 +29,6 @@ interface WizardActions {
   next: () => void;
   back: () => void;
   reset: () => void;
-  resetAfterSubmit: () => void;
-  setSurveySubmitted: (value: boolean) => void;
 }
 
 const initialState: WizardState = {
@@ -41,7 +38,6 @@ const initialState: WizardState = {
   housing: null,
   people: [],
   pets: [],
-  surveySubmitted: false,
 };
 
 export const useWizardStore = create<WizardState & WizardActions>()(
@@ -152,15 +148,6 @@ export const useWizardStore = create<WizardState & WizardActions>()(
           localStorage.removeItem("censo-wizard");
         }
       },
-
-      resetAfterSubmit: () => {
-        set({ ...initialState, surveySubmitted: true });
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("censo-wizard");
-        }
-      },
-
-      setSurveySubmitted: (value) => set({ surveySubmitted: value }),
     }),
     {
       name: "censo-wizard",

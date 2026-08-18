@@ -67,6 +67,7 @@ enum PetType {
 
 model HouseholdSurvey {
   id           String    @id @default(uuid())
+  censusNumber Int     @unique @default(autoincrement()) @map("census_number")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
   submittedAt  DateTime? @map("submitted_at") @db.Timestamptz()
@@ -83,7 +84,9 @@ model Housing {
   surveyId              String         @unique @map("survey_id")
   survey                HouseholdSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
 
-  neighborhoodOrSector  String         @map("neighborhood_or_sector")
+  neighborhoodId        String?        @map("neighborhood_id")
+  neighborhood          Neighborhood?  @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  neighborhoodOrSector  String?        @map("neighborhood_or_sector")
   address               String
   sectorType            SectorType     @map("sector_type")
   farmNameOrReference   String?        @map("farm_name_or_reference")
@@ -117,7 +120,8 @@ model Person {
   genderIdentity     GenderIdentity  @map("gender_identity")
   birthDate          DateTime        @map("birth_date") @db.Date
   ethnicAffiliation  EthnicAffiliation @map("ethnic_affiliation")
-  phoneNumber        String          @map("phone_number")
+  phoneNumber        String            @map("phone_number")
+  email              String?           @map("email")
 
   @@unique([surveyId, orderIndex])
   @@map("person")
@@ -134,4 +138,15 @@ model Pet {
 
   @@unique([surveyId, orderIndex])
   @@map("pet")
+}
+
+model Neighborhood {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  comuna    String?
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  housings  Housing[]
+
+  @@map("neighborhood")
 }

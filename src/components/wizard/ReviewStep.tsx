@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { CircleCheckIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useWizardStore } from "@/lib/store";
-import { submitSurvey } from "@/app/actions";
+import { getNeighborhoods, submitSurvey } from "@/app/actions";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { SubmittingOverlay } from "./SubmittingOverlay";
 import {
@@ -28,11 +36,22 @@ function findLabel(
 }
 
 export function ReviewStep() {
-  const { housing, people, pets, back, resetAfterSubmit } = useWizardStore();
+  const { housing, people, pets, back, reset } = useWizardStore();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [neighborhoodName, setNeighborhoodName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (housing?.neighborhoodId) {
+      getNeighborhoods().then((neighborhoods) => {
+        const found = neighborhoods.find((n) => n.id === housing.neighborhoodId);
+        if (found) setNeighborhoodName(found.name);
+      });
+    }
+  }, [housing?.neighborhoodId]);
 
   if (!housing) return null;
 
@@ -53,7 +72,7 @@ export function ReviewStep() {
       const response = await submitSurvey({ housing, people, pets, recaptchaToken });
 
       if (response.success) {
-        resetAfterSubmit();
+        setShowSuccessModal(true);
       } else {
         setResult({ success: false, message: response.error });
       }
@@ -66,6 +85,11 @@ export function ReviewStep() {
       setSubmitting(false);
       setShowConfirm(false);
     }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    reset();
   };
 
   return (
@@ -86,7 +110,10 @@ export function ReviewStep() {
           <section className="space-y-3">
             <h3 className="font-medium text-[#2d4f3a]">Datos de la vivienda</h3>
             <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <ReviewItem label="Barrio/Sector" value={housing.neighborhoodOrSector} />
+              <ReviewItem
+                label="Barrio/Sector"
+                value={neighborhoodName ?? housing.neighborhoodOrSector ?? undefined}
+              />
               <ReviewItem label="Dirección" value={housing.address} />
               <ReviewItem label="Sector" value={findLabel(housing.sectorType, sectorTypeOptions)} />
               {housing.sectorType === "rural" && (
@@ -144,6 +171,7 @@ export function ReviewStep() {
                     value={findLabel(person.ethnicAffiliation, ethnicAffiliationOptions)}
                   />
                   <ReviewItem label="Teléfono" value={person.phoneNumber} />
+                  <ReviewItem label="Correo electrónico" value={person.email} />
                 </div>
               ))}
             </div>
@@ -186,6 +214,28 @@ export function ReviewStep() {
           </Button>
         </CardFooter>
       </Card>
+
+      <Dialog open={showSuccessModal} onOpenChange={() => {}}>
+        <DialogContent showCloseButton={false} className="text-center sm:max-w-sm">
+          <DialogHeader className="items-center">
+            <div className="flex justify-center mb-4">
+              <CircleCheckIcon className="h-16 w-16 text-[#49805e]" />
+            </div>
+            <DialogTitle className="text-xl text-[#2d4f3a]">
+              ¡Censo enviado!
+            </DialogTitle>
+            <DialogDescription>
+              El formulario se envió correctamente. Gracias por participar.
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            onClick={handleCloseSuccessModal}
+            className="w-full bg-[#49805e] hover:bg-[#3a6a4b] text-white"
+          >
+            Volver al inicio
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {submitting && <SubmittingOverlay />}
 

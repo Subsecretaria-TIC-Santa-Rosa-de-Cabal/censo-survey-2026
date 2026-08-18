@@ -9,18 +9,23 @@ import { useWizardStore } from "@/lib/store";
 import {
   housingDataSchema,
   HousingData,
+  OTHER_NEIGHBORHOOD_VALUE,
   sectorTypeOptions,
   tenureTypeOptions,
   propertyStatusOptions,
   propertyTypeOptions,
 } from "@/lib/schemas";
+import { getNeighborhoods } from "@/app/actions";
 import { FormInput } from "./FormInput";
 import { FormSelect } from "./FormSelect";
+import { FormSearchableSelect } from "./FormSearchableSelect";
 import { FormTextarea } from "./FormTextarea";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 const emptyHousing: HousingData = {
+  neighborhoodId: "",
   neighborhoodOrSector: "",
+  customNeighborhood: "",
   address: "",
   sectorType: undefined as unknown as HousingData["sectorType"],
   farmNameOrReference: "",
@@ -47,6 +52,18 @@ export function HousingStep() {
   const [pendingPetsCount, setPendingPetsCount] = useState<number | null>(null);
   const [showPeopleDialog, setShowPeopleDialog] = useState(false);
   const [showPetsDialog, setShowPetsDialog] = useState(false);
+  const [neighborhoodOptions, setNeighborhoodOptions] = useState<{ value: string; label: string }[]>([]);
+  const [loadingNeighborhoods, setLoadingNeighborhoods] = useState(true);
+
+  useEffect(() => {
+    setLoadingNeighborhoods(true);
+    getNeighborhoods().then((neighborhoods) => {
+      setNeighborhoodOptions(
+        neighborhoods.map((n) => ({ value: n.id, label: n.name }))
+      );
+      setLoadingNeighborhoods(false);
+    });
+  }, []);
 
   const {
     register,
@@ -59,6 +76,9 @@ export function HousingStep() {
     defaultValues: housing ?? emptyHousing,
   });
 
+  const neighborhoodId = watch("neighborhoodId");
+  const isOtherNeighborhood = !neighborhoodId && watch("neighborhoodOrSector") === OTHER_NEIGHBORHOOD_VALUE;
+  const neighborhoodSelectValue = neighborhoodId || (isOtherNeighborhood ? OTHER_NEIGHBORHOOD_VALUE : "");
   const sectorType = watch("sectorType");
   const propertyType = watch("propertyType");
   const peopleToRegister = watch("peopleToRegister");
@@ -89,7 +109,18 @@ export function HousingStep() {
   }, [petsToRegisterNum, pets.length, syncPetsCount]);
 
   const onSubmit: SubmitHandler<HousingData> = (data) => {
-    setHousing(data);
+    const finalData = data.neighborhoodId
+      ? {
+          ...data,
+          neighborhoodOrSector: "",
+          customNeighborhood: "",
+        }
+      : {
+          ...data,
+          neighborhoodId: "",
+          neighborhoodOrSector: data.customNeighborhood?.trim() ?? "",
+        };
+    setHousing(finalData);
     next();
   };
 
@@ -103,13 +134,42 @@ export function HousingStep() {
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="px-0 grid gap-5 grid-cols-1">
-            <FormInput
-              id="neighborhoodOrSector"
+            <FormSearchableSelect
+              id="neighborhoodId"
               label="Barrio / Corregimiento / Vereda / Sector"
-              {...register("neighborhoodOrSector")}
+              value={neighborhoodSelectValue}
+              onChange={(value) => {
+                if (value === OTHER_NEIGHBORHOOD_VALUE) {
+                  setValue("neighborhoodId", "", { shouldValidate: true });
+                  setValue("neighborhoodOrSector", OTHER_NEIGHBORHOOD_VALUE, {
+                    shouldValidate: true,
+                  });
+                } else {
+                  setValue("neighborhoodId", value ?? "", {
+                    shouldValidate: true,
+                  });
+                  setValue("neighborhoodOrSector", "", { shouldValidate: true });
+                  setValue("customNeighborhood", "", { shouldValidate: true });
+                }
+              }}
+              options={neighborhoodOptions}
+              placeholder="Seleccione un barrio..."
+              searchPlaceholder="Buscar barrio..."
+              loading={loadingNeighborhoods}
+              loadingMessage="Cargando barrios..."
               error={errors.neighborhoodOrSector?.message}
               required
             />
+
+            {isOtherNeighborhood && (
+              <FormInput
+                id="customNeighborhood"
+                label="Escriba el nombre del barrio"
+                {...register("customNeighborhood")}
+                error={errors.customNeighborhood?.message}
+                required
+              />
+            )}
 
             <FormInput
               id="address"
@@ -158,6 +218,7 @@ export function HousingStep() {
                 { value: "3", label: "3" },
                 { value: "4", label: "4" },
                 { value: "5", label: "5" },
+                { value: "6", label: "6" },
               ]}
               error={errors.stratum?.message}
               required
@@ -197,6 +258,7 @@ export function HousingStep() {
               {...register("damageDescription")}
               error={errors.damageDescription?.message}
               rows={3}
+              required
             />
 
             <FormSelect

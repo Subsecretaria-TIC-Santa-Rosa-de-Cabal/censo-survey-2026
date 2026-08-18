@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const OTHER_NEIGHBORHOOD_VALUE = "__OTHER__";
+
 export const sectorTypeOptions = [
   { value: "urban", label: "Urbano" },
   { value: "rural", label: "Rural" },
@@ -75,9 +77,9 @@ const nonNegativeIntString = (message: string) =>
 
 export const housingDataSchema = z
   .object({
-    neighborhoodOrSector: z
-      .string()
-      .min(1, "El barrio/corregimiento/vereda/sector es obligatorio."),
+    neighborhoodId: z.string().optional(),
+    neighborhoodOrSector: z.string().optional(),
+    customNeighborhood: z.string().optional(),
     address: z.string().min(1, "La dirección es obligatoria."),
     sectorType: requiredEnum(["urban", "rural"], "El sector es obligatorio."),
     farmNameOrReference: z.string().optional(),
@@ -87,8 +89,8 @@ export const housingDataSchema = z
       .regex(/^\d+$/, "Debe ser un número entero positivo.")
       .refine((val) => {
         const n = Number(val);
-        return n >= 1 && n <= 5;
-      }, "El estrato debe estar entre 1 y 5."),
+        return n >= 1 && n <= 6;
+      }, "El estrato debe estar entre 1 y 6."),
     tenureType: requiredEnum(
       ["owner", "tenant", "occupant", "possessor"],
       "La forma de tenencia es obligatoria."
@@ -97,7 +99,7 @@ export const housingDataSchema = z
       ["habitable", "uninhabitable", "destroyed", "damaged"],
       "El estado del inmueble es obligatorio."
     ),
-    damageDescription: z.string().optional(),
+    damageDescription: z.string().min(1, "La descripción breve de los daños es obligatoria."),
     wasEvacuated: requiredEnum(["yes", "no"], "Debe indicar si ha sido evacuado."),
     propertyType: requiredEnum(
       ["rural_housing", "apartment", "house", "commercial_premises", "other"],
@@ -131,6 +133,25 @@ export const housingDataSchema = z
       message: "Debe especificar el tipo de inmueble.",
       path: ["propertyTypeOther"],
     }
+  )
+  .refine(
+    (data) =>
+      !!data.neighborhoodId?.trim() ||
+      (data.neighborhoodOrSector === OTHER_NEIGHBORHOOD_VALUE &&
+        !!data.customNeighborhood?.trim()),
+    {
+      message: "Debe seleccionar un barrio o escribir uno.",
+      path: ["neighborhoodOrSector"],
+    }
+  )
+  .refine(
+    (data) =>
+      data.neighborhoodOrSector !== OTHER_NEIGHBORHOOD_VALUE ||
+      !!data.customNeighborhood?.trim(),
+    {
+      message: "Debe escribir el nombre del barrio.",
+      path: ["customNeighborhood"],
+    }
   );
 
 export const personSchema = z.object({
@@ -151,6 +172,11 @@ export const personSchema = z.object({
     "La pertenencia étnica es obligatoria."
   ),
   phoneNumber: z.string().min(1, "El número de teléfono es obligatorio."),
+  email: z
+    .string()
+    .email("El correo electrónico no es válido.")
+    .optional()
+    .or(z.literal("")),
 });
 
 export const petSchema = z.object({

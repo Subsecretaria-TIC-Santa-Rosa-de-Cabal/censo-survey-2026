@@ -52,6 +52,19 @@ async function verifyRecaptcha(token: string): Promise<RecaptchaVerifyResponse> 
   return response.json();
 }
 
+export async function getNeighborhoods(): Promise<{ id: string; name: string }[]> {
+  try {
+    const neighborhoods = await prisma.neighborhood.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    });
+    return neighborhoods;
+  } catch (error) {
+    console.error("Error al obtener barrios:", error);
+    return [];
+  }
+}
+
 function toSectorType(value: HousingData["sectorType"]): SectorType {
   return value as SectorType;
 }
@@ -109,7 +122,10 @@ export async function submitSurvey(data: FullSurveyData): Promise<SubmitResult> 
         submittedAt: new Date(),
         housing: {
           create: {
-            neighborhoodOrSector: housing.neighborhoodOrSector,
+            neighborhoodId: housing.neighborhoodId || null,
+            neighborhoodOrSector: housing.neighborhoodId
+              ? null
+              : housing.neighborhoodOrSector || null,
             address: housing.address,
             sectorType: toSectorType(housing.sectorType),
             farmNameOrReference: housing.farmNameOrReference ?? null,
@@ -139,6 +155,7 @@ export async function submitSurvey(data: FullSurveyData): Promise<SubmitResult> 
             birthDate: new Date(person.birthDate),
             ethnicAffiliation: toEthnicAffiliation(person.ethnicAffiliation),
             phoneNumber: person.phoneNumber,
+            email: person.email?.trim() || null,
           })),
         },
         pets: {
