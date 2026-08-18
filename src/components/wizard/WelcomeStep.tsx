@@ -68,7 +68,7 @@ export function WelcomeStep() {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="px-0 pt-6 bg-transparent border-none">
+      <CardFooter className="px-0 pt-6 bg-transparent border-none flex flex-col sm:flex-row items-center gap-4 sm:justify-between">
         <Button
           onClick={next}
           disabled={!acceptedDataTreatment}
@@ -76,6 +76,15 @@ export function WelcomeStep() {
         >
           Comenzar
         </Button>
+
+        <div className="flex flex-col items-center sm:items-end">
+          <p className="text-xs text-muted-foreground mb-1">Formulario realizado por:</p>
+          <img
+            src="/logo_tic.png"
+            alt="Logo TIC"
+            className="h-10 w-auto object-contain"
+          />
+        </div>
       </CardFooter>
     </Card>
   );
