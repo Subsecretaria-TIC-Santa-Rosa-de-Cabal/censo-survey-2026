@@ -155,6 +155,7 @@ model Housing {
   householdMembersCount Int            @map("household_members_count")
   peopleToRegister      Int            @map("people_to_register")
   petsToRegister        Int            @default(0) @map("pets_to_register")
+  contactNumber         String         @map("contact_number")
   longitude             Decimal?       @map("longitude") @db.Decimal(12, 8)
   latitude              Decimal?       @map("latitude") @db.Decimal(12, 8)
 
@@ -178,7 +179,7 @@ model Person {
   genderIdentity           GenderIdentity     @map("gender_identity")
   birthDate          DateTime        @map("birth_date") @db.Date
   ethnicAffiliation        EthnicAffiliation  @map("ethnic_affiliation")
-  phoneNumber              String             @map("phone_number")
+  phoneNumber              String?            @map("phone_number")
   email                    String?            @map("email")
   disabilityCondition      DisabilityCondition @map("disability_condition")
   disabilityConditionOther String?            @map("disability_condition_other")

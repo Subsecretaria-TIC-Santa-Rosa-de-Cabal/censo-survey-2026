@@ -163,6 +163,7 @@ export async function submitSurvey(data: FullSurveyData): Promise<SubmitResult> 
             householdMembersCount: Number(housing.householdMembersCount),
             peopleToRegister: Number(housing.peopleToRegister),
             petsToRegister: Number(housing.petsToRegister),
+            contactNumber: housing.contactNumber,
             longitude: null,
             latitude: null,
           },
@@ -180,7 +181,7 @@ export async function submitSurvey(data: FullSurveyData): Promise<SubmitResult> 
             genderIdentity: toGenderIdentity(person.genderIdentity),
             birthDate: new Date(person.birthDate),
             ethnicAffiliation: toEthnicAffiliation(person.ethnicAffiliation),
-            phoneNumber: person.phoneNumber,
+            phoneNumber: person.phoneNumber?.trim() || null,
             email: person.email?.trim() || null,
             disabilityCondition: toDisabilityCondition(person.disabilityCondition),
             disabilityConditionOther:

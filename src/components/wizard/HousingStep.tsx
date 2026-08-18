@@ -40,6 +40,7 @@ const emptyHousing: HousingData = {
   householdMembersCount: "",
   peopleToRegister: "",
   petsToRegister: "0",
+  contactNumber: "",
   longitude: "",
   latitude: "",
 };
@@ -337,6 +338,15 @@ export function HousingStep() {
               min={0}
               {...register("petsToRegister")}
               error={errors.petsToRegister?.message}
+            />
+
+            <FormInput
+              id="contactNumber"
+              label="Número de contacto"
+              type="tel"
+              {...register("contactNumber")}
+              error={errors.contactNumber?.message}
+              required
             />
           </CardContent>
           <CardFooter className="px-0 pt-6 flex flex-col-reverse sm:flex-row gap-3 bg-transparent border-none">

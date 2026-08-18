@@ -151,6 +151,7 @@ export function ReviewStep() {
               <ReviewItem label="Núcleo familiar" value={housing.householdMembersCount.toString()} />
               <ReviewItem label="Personas a registrar" value={housing.peopleToRegister.toString()} />
               <ReviewItem label="Mascotas a registrar" value={housing.petsToRegister.toString()} />
+              <ReviewItem label="Número de contacto" value={housing.contactNumber} />
             </div>
             {housing.damageDescription && (
               <ReviewItem label="Descripción de daños" value={housing.damageDescription} />

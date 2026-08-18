@@ -187,6 +187,7 @@ export const housingDataSchema = z
     petsToRegister: nonNegativeIntString(
       "El número de mascotas no puede ser negativo."
     ),
+    contactNumber: z.string().min(1, "El número de contacto es obligatorio."),
     longitude: z.string().optional(),
     latitude: z.string().optional(),
   })
@@ -270,7 +271,7 @@ export const personSchema = z.object({
     ["indigenous", "gitano_rom", "raizal", "palenquero", "negro", "mulato", "afrodescendant", "afrocolombian", "not_applicable"],
     "La pertenencia étnica es obligatoria."
   ),
-  phoneNumber: z.string().min(1, "El número de teléfono es obligatorio."),
+  phoneNumber: z.string().optional(),
   email: z
     .string()
     .email("El correo electrónico no es válido.")

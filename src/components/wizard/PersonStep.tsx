@@ -226,7 +226,6 @@ export function PersonStep() {
             type="tel"
             {...register("phoneNumber")}
             error={errors.phoneNumber?.message}
-            required
           />
 
           <FormInput
