@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Censo Digital
 
-## Getting Started
+Aplicación web para la recolección de información de censo y visualización de métricas administrativas.
 
-First, run the development server:
+Construida con [Next.js 16](https://nextjs.org), [React 19](https://react.dev), [Prisma](https://prisma.io) y [Tailwind CSS v4](https://tailwindcss.com).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Estructura del proyecto
+
+```
+src/
+  app/
+    (public)/            # Parte pública del sitio
+      page.tsx           # Formulario de censo (con reCAPTCHA)
+      layout.tsx         # Provee RecaptchaProvider solo en la zona pública
+    admin/               # Parte privada del sitio
+      page.tsx           # Dashboard administrativo (protegido)
+      layout.tsx         # Layout del panel admin
+    api/auth/            # Endpoints de autenticación con AWS Cognito
+      login/             # Inicia flujo OAuth y redirige a Cognito Hosted UI
+      callback/          # Recibe el código y establece la sesión
+      logout/            # Cierra sesión local y en Cognito
+    layout.tsx           # Layout raíz (sin RecaptchaProvider)
+  lib/
+    auth/                # Lógica de autenticación
+      cognito.ts         # Configuración y URLs de Cognito
+      pkce.ts            # Helpers PKCE
+      session.ts         # Gestión de cookies httpOnly
+      tokens.ts          # Validación JWT con jose
+      verify.ts          # DAL verifySession() para proteger rutas
+  components/
+    admin/               # Componentes del panel administrativo
+    wizard/              # Pasos del formulario de censo
+    ui/                  # Componentes de shadcn/ui
+proxy.ts                 # Protección de rutas (Next.js 16 reemplaza middleware.ts)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Partes pública y privada
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Pública (`/`)**: formulario de censo digital. Utiliza Google reCAPTCHA v3 para proteger el envío.
+- **Privada (`/admin`)**: panel administrativo. Solo usuarios autenticados mediante AWS Cognito pueden acceder.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Autenticación con AWS Cognito
 
-## Learn More
+La aplicación utiliza el **Cognito Hosted UI** para el inicio y cierre de sesión. No existe formulario de login propio.
 
-To learn more about Next.js, take a look at the following resources:
+### Flujo
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. El usuario accede a `/admin`.
+2. `src/proxy.ts` detecta que no hay sesión válida y redirige a `/api/auth/login`.
+3. `/api/auth/login` genera `state` y PKCE (`code_verifier` / `code_challenge`) y redirige al Cognito Hosted UI.
+4. El usuario inicia sesión en AWS Cognito.
+5. Cognito redirige a `/api/auth/callback?code=...&state=...`.
+6. Se intercambia el `code` por tokens, se valida el JWT y se guarda la sesión en una cookie `httpOnly`.
+7. El usuario accede a `/admin`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Cierre de sesión
 
-## Deploy on Vercel
+El botón de cerrar sesión redirige a `/api/auth/logout`, que borra la cookie local y redirige al logout de Cognito.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Variables de entorno
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Copia `.env` y reemplaza los valores según tu entorno:
+
+```bash
+# Base de datos PostgreSQL
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+
+# Google reCAPTCHA v3
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY="..."
+RECAPTCHA_SECRET_KEY="..."
+
+# AWS Cognito
+COGNITO_REGION="us-east-2"
+COGNITO_USER_POOL_ID="us-east-2_XXXXXXXXX"
+COGNITO_CLIENT_ID="XXXXXXXXXXXXXXXXXXXXXXXXXX"
+COGNITO_DOMAIN="https://TU-DOMINIO.auth.us-east-2.amazoncognito.com"
+COGNITO_REDIRECT_URI="http://localhost:3000/api/auth/callback"
+COGNITO_LOGOUT_REDIRECT_URI="http://localhost:3000/"
+
+# Opcional
+SESSION_COOKIE_NAME="censo.session"
+```
+
+### Configuración del App Client en Cognito
+
+- **Allowed callback URLs**:
+  - Desarrollo: `http://localhost:3000/api/auth/callback`
+  - Producción: `https://censo.emir.gov.co/api/auth/callback`
+- **Allowed sign-out URLs**:
+  - Desarrollo: `http://localhost:3000/`
+  - Producción: `https://censo.emir.gov.co/`
+- **OAuth 2.0 grant types**: `Authorization code grant`
+- **OpenID Connect scopes**: `openid`, `email`, `profile`
+- No es necesario `client secret` porque el flujo usa PKCE.
+
+## Scripts disponibles
+
+```bash
+pnpm dev      # Inicia el servidor de desarrollo
+pnpm build    # Compila para producción
+pnpm start    # Inicia el servidor de producción
+pnpm lint     # Ejecuta ESLint
+```
+
+## Notas para desarrollo
+
+- El proyecto usa **Next.js 16**, cuyas convenciones difieren de versiones anteriores. Revisa `node_modules/next/dist/docs/` antes de agregar código nuevo.
+- La protección de rutas se realiza mediante `src/proxy.ts` (el antiguo `middleware.ts` está deprecado).
+- La validación de sesión se centraliza en `src/lib/auth/verify.ts` y se invoca en cada Server Component, Server Action o Route Handler protegido.
+- `cookies()` es una función asíncrona en Next.js 16; siempre usa `await cookies()`.
