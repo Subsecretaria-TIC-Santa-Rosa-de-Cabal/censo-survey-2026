@@ -48,6 +48,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const error = searchParams.get("error");
     const errorDescription = searchParams.get("error_description");
 
+    console.log(`[Cognito callback ${requestId}] request.url:`, request.url);
+    console.log(`[Cognito callback ${requestId}] request.nextUrl.href:`, request.nextUrl.href);
+    console.log(`[Cognito callback ${requestId}] request.nextUrl.search:`, request.nextUrl.search);
     console.log(
       `[Cognito callback ${requestId}] received code=${code?.slice(0, 8)}... state=${state?.slice(0, 8)}...`
     );

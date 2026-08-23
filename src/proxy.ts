@@ -100,6 +100,9 @@ function isPublicRoute(pathname: string): boolean {
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   try {
     const { pathname } = request.nextUrl;
+    console.log(`[proxy] request.url:`, request.url);
+    console.log(`[proxy] request.nextUrl.href:`, request.nextUrl.href);
+    console.log(`[proxy] request.nextUrl.search:`, request.nextUrl.search);
     console.log(`[proxy] checking route: ${pathname}`);
 
     if (isPublicRoute(pathname)) {
