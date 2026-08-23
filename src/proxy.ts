@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
 
+const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? "censo.session";
 const protectedRoutes = ["/admin"];
 const publicRoutes = ["/api/auth/login", "/api/auth/callback", "/api/auth/logout"];
 
@@ -42,21 +43,31 @@ function getJwks() {
 }
 
 async function validateSession(request: NextRequest): Promise<JWTPayload | null> {
-  const sessionCookie = request.cookies.get("censo.session");
-  if (!sessionCookie?.value) return null;
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+  if (!sessionCookie?.value) {
+    console.log("[proxy] no session cookie found");
+    return null;
+  }
 
   let idToken: string;
   try {
     const payload = JSON.parse(sessionCookie.value);
     idToken = payload.idToken;
-    if (!idToken) return null;
+    if (!idToken) {
+      console.log("[proxy] session cookie has no idToken");
+      return null;
+    }
   } catch {
+    console.log("[proxy] failed to parse session cookie");
     return null;
   }
 
   const issuer = getIssuer();
   const clientId = getClientId();
-  if (!issuer || !clientId) return null;
+  if (!issuer || !clientId) {
+    console.error("[proxy] missing Cognito configuration");
+    return null;
+  }
 
   try {
     const { payload } = await jwtVerify(idToken, getJwks(), {
@@ -66,11 +77,14 @@ async function validateSession(request: NextRequest): Promise<JWTPayload | null>
     });
 
     if (payload.exp && Date.now() >= (payload.exp - 60) * 1000) {
+      console.log("[proxy] session token expired");
       return null;
     }
 
     return payload;
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[proxy] jwt verification failed:", message);
     return null;
   }
 }
@@ -84,24 +98,39 @@ function isPublicRoute(pathname: string): boolean {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const { pathname } = request.nextUrl;
+  try {
+    const { pathname } = request.nextUrl;
+    console.log(`[proxy] checking route: ${pathname}`);
 
-  if (!isProtectedRoute(pathname)) {
+    if (isPublicRoute(pathname)) {
+      console.log(`[proxy] public auth route, passing through`);
+      return NextResponse.next();
+    }
+
+    if (!isProtectedRoute(pathname)) {
+      return NextResponse.next();
+    }
+
+    console.log(`[proxy] protected route, validating session...`);
+    const session = await validateSession(request);
+    if (!session) {
+      console.log(`[proxy] no valid session, redirecting to login`);
+      const loginUrl = new URL("/api/auth/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    console.log(`[proxy] valid session, passing through`);
     return NextResponse.next();
-  }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error("[proxy] unhandled error:", message);
+    if (stack) console.error("[proxy] stack:", stack);
 
-  // Si ya está en una ruta pública de auth, no hacemos nada
-  if (isPublicRoute(pathname)) {
-    return NextResponse.next();
-  }
-
-  const session = await validateSession(request);
-  if (!session) {
-    const loginUrl = new URL("/api/auth/login", request.nextUrl);
+    // En caso de error crítico, redirigir a login en lugar de dejar crashear
+    const loginUrl = new URL("/api/auth/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
-
-  return NextResponse.next();
 }
 
 export const config = {
