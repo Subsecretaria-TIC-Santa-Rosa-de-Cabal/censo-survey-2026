@@ -73,6 +73,9 @@ El botón de cerrar sesión redirige a `/api/auth/logout`, que borra la cookie l
 Copia `.env` y reemplaza los valores según tu entorno:
 
 ```bash
+# URL pública de la aplicación (sin barra final)
+NEXT_PUBLIC_APP_URL="https://censo.emir.gov.co"
+
 # Base de datos PostgreSQL
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
 

@@ -41,7 +41,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Environment variables
 
-Do not hardcode Cognito, database, or reCAPTCHA secrets. Read them from environment variables. Required server-side variables:
+Do not hardcode Cognito, database, reCAPTCHA secrets, or the public app URL. Read them from environment variables. Required server-side variables:
 
 - `DATABASE_URL`
 - `RECAPTCHA_SECRET_KEY`
@@ -55,3 +55,4 @@ Do not hardcode Cognito, database, or reCAPTCHA secrets. Read them from environm
 Client-side (prefixed with `NEXT_PUBLIC_`):
 
 - `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
+- `NEXT_PUBLIC_APP_URL` (e.g. `https://censo.emir.gov.co`)

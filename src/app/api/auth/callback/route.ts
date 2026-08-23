@@ -11,6 +11,7 @@ import {
   setSession,
 } from "@/lib/auth/session";
 import { TokenSet } from "@/lib/auth/tokens";
+import { getAppUrl } from "@/lib/auth/url";
 
 interface TokenResponse {
   id_token: string;
@@ -25,17 +26,6 @@ function getRequestId(): string {
     return crypto.randomUUID();
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function getAppUrl(request: NextRequest): URL {
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = request.headers.get("host");
-
-  const protocol = forwardedProto ?? request.nextUrl.protocol.replace(":", "");
-  const hostname = forwardedHost ?? host ?? request.nextUrl.host;
-
-  return new URL(`${protocol}://${hostname}`);
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

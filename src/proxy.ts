@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify, createRemoteJWKSet, JWTPayload } from "jose";
+import { getAppUrl } from "@/lib/auth/url";
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME ?? "censo.session";
 const protectedRoutes = ["/admin"];
@@ -95,17 +96,6 @@ function isProtectedRoute(pathname: string): boolean {
 
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
-}
-
-function getAppUrl(request: NextRequest): URL {
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = request.headers.get("host");
-
-  const protocol = forwardedProto ?? request.nextUrl.protocol.replace(":", "");
-  const hostname = forwardedHost ?? host ?? request.nextUrl.host;
-
-  return new URL(`${protocol}://${hostname}`);
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
