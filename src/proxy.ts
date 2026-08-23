@@ -97,12 +97,24 @@ function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
+function getAppUrl(request: NextRequest): URL {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = request.headers.get("host");
+
+  const protocol = forwardedProto ?? request.nextUrl.protocol.replace(":", "");
+  const hostname = forwardedHost ?? host ?? request.nextUrl.host;
+
+  return new URL(`${protocol}://${hostname}`);
+}
+
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   try {
     const { pathname } = request.nextUrl;
-    console.log(`[proxy] request.url:`, request.url);
-    console.log(`[proxy] request.nextUrl.href:`, request.nextUrl.href);
-    console.log(`[proxy] request.nextUrl.search:`, request.nextUrl.search);
+    const appUrl = getAppUrl(request);
+
+    console.log(`[proxy] raw request.url:`, request.url);
+    console.log(`[proxy] computed appUrl:`, appUrl.toString());
     console.log(`[proxy] checking route: ${pathname}`);
 
     if (isPublicRoute(pathname)) {
@@ -118,7 +130,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const session = await validateSession(request);
     if (!session) {
       console.log(`[proxy] no valid session, redirecting to login`);
-      const loginUrl = new URL("/api/auth/login", request.url);
+      const loginUrl = new URL("/api/auth/login", appUrl);
       return NextResponse.redirect(loginUrl);
     }
 
@@ -131,7 +143,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     if (stack) console.error("[proxy] stack:", stack);
 
     // En caso de error crítico, redirigir a login en lugar de dejar crashear
-    const loginUrl = new URL("/api/auth/login", request.url);
+    const appUrl = getAppUrl(request);
+    const loginUrl = new URL("/api/auth/login", appUrl);
     return NextResponse.redirect(loginUrl);
   }
 }
