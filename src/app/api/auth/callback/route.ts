@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/cognito";
 import {
   clearOAuthState,
+  getCookieConfig,
   getOAuthState,
   setSession,
 } from "@/lib/auth/session";
@@ -146,16 +147,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       tokenType: data.token_type,
     };
 
-    console.log(`[Cognito callback ${requestId}] setting session cookie...`);
-    await setSession(tokens);
+    const appUrl = getAppUrl(request);
+    const redirectUrl = new URL("/admin", appUrl);
+    const cookieConfig = getCookieConfig(request);
+
+    console.log(`[Cognito callback ${requestId}] setting session cookie...`, cookieConfig);
+    await setSession(tokens, cookieConfig);
     console.log(`[Cognito callback ${requestId}] session cookie set`);
 
     console.log(`[Cognito callback ${requestId}] clearing oauth state...`);
     await clearOAuthState();
     console.log(`[Cognito callback ${requestId}] oauth state cleared`);
 
-    const appUrl = getAppUrl(request);
-    const redirectUrl = new URL("/admin", appUrl);
     console.log(
       `[Cognito callback ${requestId}] redirecting to:`,
       redirectUrl.toString()

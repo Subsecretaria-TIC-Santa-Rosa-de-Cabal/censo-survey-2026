@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getLogoutUrl, getClientId, getLogoutRedirectUri } from "@/lib/auth/cognito";
-import { deleteSession } from "@/lib/auth/session";
+import { deleteSession, getCookieConfig } from "@/lib/auth/session";
 
-export async function GET(): Promise<NextResponse> {
-  await deleteSession();
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const cookieConfig = getCookieConfig(request);
+  await deleteSession(cookieConfig);
 
   const params = new URLSearchParams({
     client_id: getClientId(),

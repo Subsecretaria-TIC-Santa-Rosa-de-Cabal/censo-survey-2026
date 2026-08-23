@@ -1,18 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   getAuthorizeUrl,
   getClientId,
   getRedirectUri,
 } from "@/lib/auth/cognito";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/auth/pkce";
-import { setOAuthState } from "@/lib/auth/session";
+import { getCookieConfig, setOAuthState } from "@/lib/auth/session";
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = generateCodeChallenge(codeVerifier);
 
-  await setOAuthState(state, codeVerifier);
+  const cookieConfig = getCookieConfig(request);
+  await setOAuthState(state, codeVerifier, cookieConfig);
 
   const params = new URLSearchParams({
     response_type: "code",
