@@ -27,6 +27,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
+  const requestId = crypto.randomUUID();
+  console.log(`[Cognito callback ${requestId}] received code=${code?.slice(0, 8)}... state=${state?.slice(0, 8)}...`);
+
   if (error) {
     return NextResponse.json(
       { error: errorDescription ?? error },
@@ -63,21 +66,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     tokenParams.client_secret = clientSecret;
   }
 
-  console.log("[Cognito callback] redirect_uri:", redirectUri);
-  console.log("[Cognito callback] code_verifier length:", oauthState.codeVerifier.length);
-  console.log("[Cognito callback] state matches:", oauthState.state === state);
+  const body = new URLSearchParams(tokenParams).toString();
+
+  console.log(`[Cognito callback ${requestId}] token endpoint:`, getTokenUrl());
+  console.log(`[Cognito callback ${requestId}] redirect_uri:`, redirectUri);
+  console.log(`[Cognito callback ${requestId}] client_id:`, getClientId().slice(0, 8) + "...");
+  console.log(`[Cognito callback ${requestId}] code_verifier length:`, oauthState.codeVerifier.length);
+  console.log(`[Cognito callback ${requestId}] state matches:`, oauthState.state === state);
+  console.log(`[Cognito callback ${requestId}] has client_secret:`, Boolean(clientSecret));
+  console.log(`[Cognito callback ${requestId}] request body length:`, body.length);
 
   const tokenResponse = await fetch(getTokenUrl(), {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams(tokenParams).toString(),
+    body,
   });
 
   if (!tokenResponse.ok) {
     const errorBody = await tokenResponse.text();
-    console.error("Error al intercambiar código por tokens:", errorBody);
+    console.error(`[Cognito callback ${requestId}] token error (${tokenResponse.status}):`, errorBody);
+    console.error(`[Cognito callback ${requestId}] request body sent:`, body.replace(oauthState.codeVerifier, "[REDACTED]"));
     return NextResponse.json(
       { error: "No se pudo completar el inicio de sesión." },
       { status: 500 }
@@ -85,6 +95,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const data = (await tokenResponse.json()) as TokenResponse;
+  console.log(`[Cognito callback ${requestId}] tokens exchanged successfully`);
 
   const tokens: TokenSet = {
     idToken: data.id_token,
