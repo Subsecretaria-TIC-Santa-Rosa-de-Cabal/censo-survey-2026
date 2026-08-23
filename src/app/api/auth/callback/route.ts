@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTokenUrl, getClientId, getRedirectUri } from "@/lib/auth/cognito";
+import {
+  getTokenUrl,
+  getClientId,
+  getRedirectUri,
+  getClientSecret,
+} from "@/lib/auth/cognito";
 import {
   clearOAuthState,
   getOAuthState,
@@ -44,18 +49,30 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  const redirectUri = getRedirectUri();
+  const tokenParams: Record<string, string> = {
+    grant_type: "authorization_code",
+    client_id: getClientId(),
+    redirect_uri: redirectUri,
+    code,
+    code_verifier: oauthState.codeVerifier,
+  };
+
+  const clientSecret = getClientSecret();
+  if (clientSecret) {
+    tokenParams.client_secret = clientSecret;
+  }
+
+  console.log("[Cognito callback] redirect_uri:", redirectUri);
+  console.log("[Cognito callback] code_verifier length:", oauthState.codeVerifier.length);
+  console.log("[Cognito callback] state matches:", oauthState.state === state);
+
   const tokenResponse = await fetch(getTokenUrl(), {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: getClientId(),
-      redirect_uri: getRedirectUri(),
-      code,
-      code_verifier: oauthState.codeVerifier,
-    }).toString(),
+    body: new URLSearchParams(tokenParams).toString(),
   });
 
   if (!tokenResponse.ok) {

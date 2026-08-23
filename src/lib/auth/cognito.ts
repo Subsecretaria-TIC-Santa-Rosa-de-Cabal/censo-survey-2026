@@ -4,6 +4,7 @@ export const cognitoConfig = {
   region: process.env.COGNITO_REGION,
   userPoolId: process.env.COGNITO_USER_POOL_ID,
   clientId: process.env.COGNITO_CLIENT_ID,
+  clientSecret: process.env.COGNITO_CLIENT_SECRET,
   domain: process.env.COGNITO_DOMAIN,
   redirectUri: process.env.COGNITO_REDIRECT_URI,
   logoutRedirectUri: process.env.COGNITO_LOGOUT_REDIRECT_URI,
@@ -46,6 +47,10 @@ export function getLogoutUrl(): string {
 
 export function getClientId(): string {
   return requireConfig("clientId");
+}
+
+export function getClientSecret(): string | undefined {
+  return cognitoConfig.clientSecret;
 }
 
 export function getRedirectUri(): string {

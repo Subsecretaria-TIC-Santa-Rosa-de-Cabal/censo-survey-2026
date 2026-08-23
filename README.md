@@ -4,6 +4,17 @@ Aplicación web para la recolección de información de censo y visualización d
 
 Construida con [Next.js 16](https://nextjs.org), [React 19](https://react.dev), [Prisma](https://prisma.io) y [Tailwind CSS v4](https://tailwindcss.com).
 
+## Requisitos previos
+
+- [Node.js](https://nodejs.org) >= 20
+- [pnpm](https://pnpm.io) >= 9 (gestor de paquetes obligatorio; el proyecto usa `pnpm-lock.yaml`)
+
+Instala las dependencias con:
+
+```bash
+pnpm install
+```
+
 ## Estructura del proyecto
 
 ```
